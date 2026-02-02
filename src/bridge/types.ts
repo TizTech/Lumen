@@ -1,0 +1,67 @@
+export type Tab = {
+  id: string;
+  title: string;
+  url: string;
+  favicon?: string;
+  isLoading: boolean;
+  isActive: boolean;
+  lastAccessed?: number;
+};
+
+export type Space = {
+  id: string;
+  name: string;
+  color: string;
+  count: number;
+};
+
+export type Favorite = {
+  id: string;
+  name: string;
+  icon: string;
+  url: string;
+};
+
+export type QuickLink = {
+  id: string;
+  name: string;
+  icon: string;
+};
+
+export type ContentBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type SessionState = {
+  tabs: Tab[];
+  activeTabId: string | null;
+};
+
+export type HistoryEntry = {
+  id: string;
+  url: string;
+  title: string;
+  visitCount: number;
+  lastVisitedAt: number;
+};
+
+export type BookmarkEntry = {
+  id: string;
+  url: string;
+  title: string;
+  folderId?: string | null;
+  createdAt: number;
+};
+
+export type DownloadItem = {
+  id: string;
+  filename: string;
+  url: string;
+  totalBytes: number;
+  receivedBytes: number;
+  state: "progressing" | "completed" | "cancelled" | "interrupted";
+  startedAt: number;
+};

@@ -1,0 +1,21 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.lumen-shell {
+  width: min(1200px, 95vw);
+}
+
+@media (max-width: 900px) {
+  .app {
+    padding: 28px 18px 36px;
+  }
+
+  .lumen-shell {
+    width: 100%;
+  }
+}

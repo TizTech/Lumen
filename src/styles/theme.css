@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-display: "Fraunces", "Iowan Old Style", "Garamond", serif;
+  --font-body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+
+  --color-ink-900: #0f1623;
+  --color-ink-700: #2f3b52;
+  --color-ink-500: #56627a;
+  --color-ink-300: #7f8aa2;
+  --color-ink-200: #a8b1c4;
+
+  --color-surface-1: #f6f7f9;
+  --color-surface-2: #ffffff;
+  --color-surface-3: #eef1f5;
+  --color-surface-4: #e8eaee;
+  --color-surface-5: #cfd5de;
+
+  --color-accent-500: #5b8f8a;
+  --color-accent-400: #79a9a3;
+  --color-accent-300: #b0d0cb;
+
+  --shadow-ambient: 0 20px 60px rgba(15, 22, 35, 0.14);
+  --shadow-elevated: 0 12px 30px rgba(15, 22, 35, 0.12);
+  --shadow-subtle: 0 8px 20px rgba(15, 22, 35, 0.08);
+
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 8px;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 240ms ease;
+  --transition-slow: 420ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-ink-900);
+  background: radial-gradient(circle at top, #f3f6fb 0%, #eceff4 35%, #e8ebf1 100%);
+}
+
+#root {
+  min-height: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+}
