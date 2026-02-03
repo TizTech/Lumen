@@ -87,7 +87,8 @@ const createWindow = async () => {
     tabManager.restoreSession(session);
     setupDownloads();
     if (app.isPackaged) {
-        await mainWindow.loadFile(path.join(__dirname, "../../dist/index.html"));
+        const indexPath = path.join(app.getAppPath(), "dist", "index.html");
+        await mainWindow.loadFile(indexPath);
     }
     else {
         await mainWindow.loadURL(DEV_SERVER_URL);
@@ -95,6 +96,9 @@ const createWindow = async () => {
     }
     mainWindow.on("closed", () => {
         mainWindow = null;
+    });
+    mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+        console.error("Failed to load", { errorCode, errorDescription, validatedURL });
     });
 };
 app.whenReady().then(createWindow);

@@ -54,7 +54,7 @@ const BrowserSurface = ({
       const width = rect.width - (hasWeb ? paddingLeft + paddingRight : 0);
       const height = rect.height - (hasWeb ? paddingTop + paddingBottom : 0);
 
-      window.lumen.setContentBounds({
+      window.lumen?.setContentBounds({
         x: Math.round(x),
         y: Math.round(y),
         width: Math.max(0, Math.round(width)),
