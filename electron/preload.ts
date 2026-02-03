@@ -14,10 +14,12 @@ contextBridge.exposeInMainWorld("lumen", {
   goBack: () => ipcRenderer.send("tabs:back"),
   goForward: () => ipcRenderer.send("tabs:forward"),
   reload: () => ipcRenderer.send("tabs:reload"),
-  newTab: (url?: string) => ipcRenderer.send("tabs:new", url),
+  newTab: (url?: string, activate = true) => ipcRenderer.invoke("tabs:new", url, activate) as Promise<string | null>,
   closeTab: (id: string) => ipcRenderer.send("tabs:close", id),
   activateTab: (id: string) => ipcRenderer.send("tabs:activate", id),
   setContentBounds: (bounds: ContentBounds) => ipcRenderer.send("view:bounds", bounds),
+  hideView: () => ipcRenderer.send("view:hide"),
+  showView: () => ipcRenderer.send("view:show"),
   onTabsUpdated: (callback: (tabs: Tab[]) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, tabs: Tab[]) => callback(tabs);
     ipcRenderer.on("tabs:updated", listener);
@@ -45,4 +47,13 @@ contextBridge.exposeInMainWorld("lumen", {
       return () => ipcRenderer.removeListener("downloads:updated", listener);
     },
   },
+  onNewTabRequested: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on("ui:newtab", listener);
+    return () => ipcRenderer.removeListener("ui:newtab", listener);
+  },
+});
+
+contextBridge.exposeInMainWorld("lumenEnv", {
+  isElectron: true,
 });

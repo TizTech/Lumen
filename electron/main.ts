@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, crashReporter } from "electron";
+import { app, BrowserWindow, ipcMain, crashReporter, globalShortcut } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -61,6 +61,10 @@ const schedulePersist = () => {
 };
 
 const createWindow = async () => {
+  const preloadPath = app.isPackaged
+    ? path.join(__dirname, "preload.cjs")
+    : path.join(process.cwd(), "electron", "preload.cjs");
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -68,10 +72,10 @@ const createWindow = async () => {
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 20, y: 20 },
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   });
 
@@ -112,6 +116,36 @@ app.whenReady().then(() => {
     });
   }
   setupUpdater();
+
+  const registerShortcuts = () => {
+    globalShortcut.register("CommandOrControl+T", () => {
+      if (mainWindow?.isFocused()) {
+        mainWindow.webContents.send("ui:newtab");
+      }
+    });
+    // Cmd/Ctrl+W: close tab if more than 1, otherwise close window.
+    globalShortcut.register("CommandOrControl+W", () => {
+      if (!mainWindow?.isFocused()) return;
+      const count = tabManager?.getTabCount() ?? 0;
+      if (count <= 1) {
+        mainWindow.close();
+        return;
+      }
+      const activeId = tabManager?.getActiveTabId();
+      if (activeId) {
+        tabManager?.closeTab(activeId);
+      }
+    });
+  };
+
+  const unregisterShortcuts = () => {
+    globalShortcut.unregisterAll();
+  };
+
+  app.on("browser-window-focus", registerShortcuts);
+  app.on("browser-window-blur", unregisterShortcuts);
+  registerShortcuts();
+  app.on("will-quit", unregisterShortcuts);
 });
 
 app.on("window-all-closed", () => {
@@ -130,8 +164,8 @@ ipcMain.handle("tabs:get", () => {
   return tabManager?.getState() ?? defaultSession;
 });
 
-ipcMain.on("tabs:new", (_event, url?: string) => {
-  tabManager?.createTab(url ?? "");
+ipcMain.handle("tabs:new", (_event, url?: string, activate = true) => {
+  return tabManager?.createTab(url ?? "", undefined, "New Tab", activate) ?? null;
 });
 
 ipcMain.on("tabs:close", (_event, id: string) => {
@@ -165,17 +199,25 @@ ipcMain.on("view:bounds", (_event, bounds: ContentBounds) => {
   tabManager?.setContentBounds(bounds);
 });
 
+ipcMain.on("view:hide", () => {
+  tabManager?.hideActiveView();
+});
+
+ipcMain.on("view:show", () => {
+  tabManager?.showActiveView();
+});
+
 ipcMain.handle("history:list", () => listHistory());
-ipcMain.handle("history:clear", () => {
-  clearHistory();
+ipcMain.handle("history:clear", async () => {
+  await clearHistory();
 });
 
 ipcMain.handle("bookmarks:list", () => listBookmarks());
-ipcMain.handle("bookmarks:add", (_event, url: string, title: string) => {
-  addBookmark(url, title);
+ipcMain.handle("bookmarks:add", async (_event, url: string, title: string) => {
+  await addBookmark(url, title);
 });
-ipcMain.handle("bookmarks:remove", (_event, id: string) => {
-  removeBookmark(id);
+ipcMain.handle("bookmarks:remove", async (_event, id: string) => {
+  await removeBookmark(id);
 });
 
 ipcMain.handle("downloads:list", () => listDownloads());

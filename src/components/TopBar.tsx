@@ -14,6 +14,10 @@ type TopBarProps = {
   onForward: () => void;
   onBookmark: () => void;
   isBookmarked: boolean;
+  orientation?: "horizontal" | "vertical";
+  compact?: boolean;
+  dense?: boolean;
+  onTabContextMenu?: (id: string, x: number, y: number) => void;
 };
 
 const TopBar = ({
@@ -28,10 +32,22 @@ const TopBar = ({
   onForward,
   onBookmark,
   isBookmarked,
+  orientation = "horizontal",
+  compact = false,
+  dense = false,
+  onTabContextMenu,
 }: TopBarProps) => {
   return (
-    <div className="top-bar">
-      <TabStrip tabs={tabs} onActivate={onActivateTab} onClose={onCloseTab} onNewTab={onNewTab} />
+    <div className={`top-bar ${compact ? "compact" : ""}`}>
+      <TabStrip
+        tabs={tabs}
+        onActivate={onActivateTab}
+        onClose={onCloseTab}
+        onNewTab={onNewTab}
+        orientation={orientation}
+        dense={dense}
+        onContextMenu={onTabContextMenu}
+      />
       <Omnibox
         activeUrl={activeTab?.url ?? ""}
         onNavigate={onNavigate}

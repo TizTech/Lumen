@@ -13,6 +13,7 @@ type BrowserSurfaceProps = {
   history: import("../bridge/types").HistoryEntry[];
   downloadsVisible: boolean;
   downloads: import("../bridge/types").DownloadItem[];
+  suppressWeb?: boolean;
 };
 
 const BrowserSurface = ({
@@ -24,6 +25,7 @@ const BrowserSurface = ({
   history,
   downloadsVisible,
   downloads,
+  suppressWeb = false,
 }: BrowserSurfaceProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const showHero = !activeTab?.url;
@@ -34,16 +36,29 @@ const BrowserSurface = ({
     }
 
     const updateBounds = () => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {
+      const node = containerRef.current;
+      if (!node) {
         return;
       }
 
+      const rect = node.getBoundingClientRect();
+      const styles = window.getComputedStyle(node);
+      const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+      const paddingTop = parseFloat(styles.paddingTop) || 0;
+      const paddingRight = parseFloat(styles.paddingRight) || 0;
+      const paddingBottom = parseFloat(styles.paddingBottom) || 0;
+
+      const hasWeb = activeTab?.url && !suppressWeb;
+      const x = rect.left + (hasWeb ? paddingLeft : 0);
+      const y = rect.top + (hasWeb ? paddingTop : 0);
+      const width = rect.width - (hasWeb ? paddingLeft + paddingRight : 0);
+      const height = rect.height - (hasWeb ? paddingTop + paddingBottom : 0);
+
       window.lumen.setContentBounds({
-        x: Math.round(rect.left),
-        y: Math.round(rect.top),
-        width: Math.round(rect.width),
-        height: Math.round(rect.height),
+        x: Math.round(x),
+        y: Math.round(y),
+        width: Math.max(0, Math.round(width)),
+        height: Math.max(0, Math.round(height)),
       });
     };
 
@@ -61,17 +76,20 @@ const BrowserSurface = ({
       resizeObserver.disconnect();
       window.removeEventListener("resize", scheduleUpdate);
     };
-  }, [activeTab?.id, activeTab?.url]);
+  }, [activeTab?.id, activeTab?.url, suppressWeb]);
 
   useEffect(() => {
     if (!window.lumen) return;
-    if (!activeTab?.url) {
+    if (!activeTab?.url || suppressWeb) {
       window.lumen.setContentBounds({ x: 0, y: 0, width: 0, height: 0 });
     }
-  }, [activeTab?.url]);
+  }, [activeTab?.url, suppressWeb]);
 
   return (
-    <section ref={containerRef} className="content-area">
+    <section
+      ref={containerRef}
+      className={`content-area ${activeTab?.url && !suppressWeb ? "has-web" : ""}`}
+    >
       <BookmarksPanel visible={bookmarksVisible} items={bookmarks} />
       <HistoryPanel visible={historyVisible} items={history} />
       <DownloadsPanel visible={downloadsVisible} items={downloads} />

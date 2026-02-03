@@ -1,4 +1,5 @@
 import { BrowserView } from "electron";
+import { recordVisit } from "./history.js";
 const createId = () => `tab-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 export default class TabManager {
     window;
@@ -18,9 +19,15 @@ export default class TabManager {
             activeTabId: this.activeTabId,
         };
     }
+    getTabCount() {
+        return this.tabs.size;
+    }
+    getActiveTabId() {
+        return this.activeTabId;
+    }
     restoreSession(session) {
         session.tabs.forEach((tab) => {
-            this.createTab(tab.url, tab.id, tab.title);
+            this.createTab(tab.url, tab.id, tab.title, false);
         });
         if (session.activeTabId) {
             this.activateTab(session.activeTabId);
@@ -32,9 +39,10 @@ export default class TabManager {
             }
         }
     }
-    createTab(url = "", id = createId(), title = "New Tab") {
+    createTab(url = "", id, title = "New Tab", activate = true) {
+        const tabId = id ?? createId();
         const tab = {
-            id,
+            id: tabId,
             title,
             url,
             isLoading: false,
@@ -44,11 +52,14 @@ export default class TabManager {
             tab.view = this.createView(tab);
             tab.view.webContents.loadURL(url);
         }
-        this.tabs.set(id, tab);
-        this.emitTabsUpdated();
-        if (!this.activeTabId) {
-            this.activateTab(id);
+        this.tabs.set(tabId, tab);
+        if (activate) {
+            this.activateTab(tabId);
         }
+        else {
+            this.emitTabsUpdated();
+        }
+        return tabId;
     }
     closeTab(id) {
         const tab = this.tabs.get(id);
@@ -80,7 +91,7 @@ export default class TabManager {
     }
     navigate(url) {
         if (!this.activeTabId) {
-            this.createTab(url);
+            this.createTab(url, createId(), "New Tab", true);
             return;
         }
         const tab = this.tabs.get(this.activeTabId);
@@ -135,6 +146,12 @@ export default class TabManager {
     detachView() {
         this.window.setBrowserView(null);
     }
+    hideActiveView() {
+        this.detachView();
+    }
+    showActiveView() {
+        this.attachViewForActiveTab();
+    }
     emitTabsUpdated() {
         this.onTabsUpdated(this.getTabSnapshots());
     }
@@ -165,10 +182,12 @@ export default class TabManager {
         });
         view.webContents.on("did-navigate", (_event, url) => {
             tab.url = url;
+            void recordVisit(url, tab.title || url);
             this.emitTabsUpdated();
         });
         view.webContents.on("did-navigate-in-page", (_event, url) => {
             tab.url = url;
+            void recordVisit(url, tab.title || url);
             this.emitTabsUpdated();
         });
         return view;

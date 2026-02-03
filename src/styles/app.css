@@ -10,6 +10,29 @@
   width: min(1200px, 95vw);
 }
 
+.lumen-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 18px;
+}
+
+.app-electron {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 24px 28px 28px;
+  height: 100vh;
+}
+
+.app-electron .lumen-shell {
+  width: 100%;
+  height: 100%;
+}
+
+.app-electron .lumen-content {
+  height: 100%;
+}
+
 @media (max-width: 900px) {
   .app {
     padding: 28px 18px 36px;

@@ -40,9 +40,17 @@ export default class TabManager {
     };
   }
 
+  getTabCount() {
+    return this.tabs.size;
+  }
+
+  getActiveTabId() {
+    return this.activeTabId;
+  }
+
   restoreSession(session: SessionState) {
     session.tabs.forEach((tab) => {
-      this.createTab(tab.url, tab.id, tab.title);
+      this.createTab(tab.url, tab.id, tab.title, false);
     });
     if (session.activeTabId) {
       this.activateTab(session.activeTabId);
@@ -54,9 +62,10 @@ export default class TabManager {
     }
   }
 
-  createTab(url = "", id = createId(), title = "New Tab") {
+  createTab(url = "", id?: string, title = "New Tab", activate = true) {
+    const tabId = id ?? createId();
     const tab: TabState = {
-      id,
+      id: tabId,
       title,
       url,
       isLoading: false,
@@ -68,11 +77,13 @@ export default class TabManager {
       tab.view.webContents.loadURL(url);
     }
 
-    this.tabs.set(id, tab);
-    this.emitTabsUpdated();
-    if (!this.activeTabId) {
-      this.activateTab(id);
+    this.tabs.set(tabId, tab);
+    if (activate) {
+      this.activateTab(tabId);
+    } else {
+      this.emitTabsUpdated();
     }
+    return tabId;
   }
 
   closeTab(id: string) {
@@ -108,7 +119,7 @@ export default class TabManager {
 
   navigate(url: string) {
     if (!this.activeTabId) {
-      this.createTab(url);
+      this.createTab(url, createId(), "New Tab", true);
       return;
     }
     const tab = this.tabs.get(this.activeTabId);
@@ -168,6 +179,14 @@ export default class TabManager {
     this.window.setBrowserView(null);
   }
 
+  hideActiveView() {
+    this.detachView();
+  }
+
+  showActiveView() {
+    this.attachViewForActiveTab();
+  }
+
   private emitTabsUpdated() {
     this.onTabsUpdated(this.getTabSnapshots());
   }
@@ -204,13 +223,13 @@ export default class TabManager {
 
     view.webContents.on("did-navigate", (_event, url) => {
       tab.url = url;
-      recordVisit(url, tab.title || url);
+      void recordVisit(url, tab.title || url);
       this.emitTabsUpdated();
     });
 
     view.webContents.on("did-navigate-in-page", (_event, url) => {
       tab.url = url;
-      recordVisit(url, tab.title || url);
+      void recordVisit(url, tab.title || url);
       this.emitTabsUpdated();
     });
 

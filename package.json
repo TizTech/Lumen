@@ -8,7 +8,7 @@
     "dev:renderer": "vite",
     "dev:electron": "wait-on http://localhost:5173 dist-electron/electron/main.js && electron dist-electron/electron/main.js",
     "dev": "concurrently -k \"npm run dev:renderer\" \"tsc -p electron/tsconfig.json --watch\" \"npm run dev:electron\"",
-    "build:electron": "tsc -p electron/tsconfig.json",
+    "build:electron": "tsc -p electron/tsconfig.json && cp electron/preload.cjs dist-electron/electron/preload.cjs",
     "build": "tsc -b && vite build && npm run build:electron",
     "package": "npm run build && electron-builder",
     "start": "electron dist-electron/electron/main.js",
@@ -16,7 +16,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "better-sqlite3": "^11.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

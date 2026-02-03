@@ -5,16 +5,36 @@ type TabStripProps = {
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onNewTab: () => void;
+  orientation?: "horizontal" | "vertical";
+  dense?: boolean;
+  onContextMenu?: (id: string, x: number, y: number) => void;
 };
 
-const TabStrip = ({ tabs, onActivate, onClose, onNewTab }: TabStripProps) => {
+const TabStrip = ({
+  tabs,
+  onActivate,
+  onClose,
+  onNewTab,
+  orientation = "horizontal",
+  dense = false,
+  onContextMenu,
+}: TabStripProps) => {
   return (
-    <div className="tab-strip">
+    <div
+      className={`tab-strip ${orientation === "vertical" ? "vertical" : ""} ${
+        dense ? "dense" : ""
+      }`}
+    >
       {tabs.map((tab, index) => (
         <div
           key={tab.id}
           className={`tab fade-in delay-${Math.min(index, 3)} ${tab.isActive ? "active" : ""}`}
           onClick={() => onActivate(tab.id)}
+          onContextMenu={(event) => {
+            if (!onContextMenu) return;
+            event.preventDefault();
+            onContextMenu(tab.id, event.clientX, event.clientY);
+          }}
         >
           <span className="tab-favicon">
             {tab.favicon ? (
@@ -27,7 +47,9 @@ const TabStrip = ({ tabs, onActivate, onClose, onNewTab }: TabStripProps) => {
               "◦"
             )}
           </span>
-          <span>{tab.title || "New Tab"}</span>
+          <span className="tab-title" title={tab.title || "New Tab"}>
+            {tab.title || "New Tab"}
+          </span>
           {tab.isLoading && <span className="tab-loading" aria-label="Loading">•</span>}
           <button
             className="tab-close"

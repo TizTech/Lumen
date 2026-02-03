@@ -1,4 +1,6 @@
-import { autoUpdater } from "electron-updater";
+import updater from "electron-updater";
+
+const { autoUpdater } = updater;
 
 export const setupUpdater = () => {
   if (!process.env.LUMEN_UPDATES) {

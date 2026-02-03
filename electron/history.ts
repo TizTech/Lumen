@@ -1,38 +1,36 @@
-import { getDb } from "./db.js";
-import { type HistoryEntry } from "../src/bridge/types.js";
+import type { HistoryEntry } from "../src/bridge/types.js";
+import { getHistory, setHistory } from "./storage.js";
 
 const createId = (url: string) => `hist-${Buffer.from(url).toString("base64url")}`;
 
-export const recordVisit = (url: string, title: string) => {
-  const db = getDb();
+export const recordVisit = async (url: string, title: string) => {
+  const history = await getHistory();
   const id = createId(url);
   const now = Date.now();
-  const existing = db
-    .prepare("SELECT visitCount FROM history WHERE id = ?")
-    .get(id) as { visitCount: number } | undefined;
+  const existing = history.find((entry) => entry.id === id);
 
   if (existing) {
-    db.prepare("UPDATE history SET title = ?, visitCount = ?, lastVisitedAt = ? WHERE id = ?").run(
-      title,
-      existing.visitCount + 1,
-      now,
-      id
-    );
+    existing.title = title || url;
+    existing.visitCount += 1;
+    existing.lastVisitedAt = now;
   } else {
-    db.prepare(
-      "INSERT INTO history (id, url, title, visitCount, lastVisitedAt) VALUES (?, ?, ?, ?, ?)"
-    ).run(id, url, title || url, 1, now);
+    history.unshift({
+      id,
+      url,
+      title: title || url,
+      visitCount: 1,
+      lastVisitedAt: now,
+    });
   }
+
+  await setHistory(history);
 };
 
-export const listHistory = (): HistoryEntry[] => {
-  const db = getDb();
-  return db
-    .prepare("SELECT id, url, title, visitCount, lastVisitedAt FROM history ORDER BY lastVisitedAt DESC")
-    .all() as HistoryEntry[];
+export const listHistory = async (): Promise<HistoryEntry[]> => {
+  const history = await getHistory();
+  return history.sort((a, b) => b.lastVisitedAt - a.lastVisitedAt);
 };
 
-export const clearHistory = () => {
-  const db = getDb();
-  db.prepare("DELETE FROM history").run();
+export const clearHistory = async () => {
+  await setHistory([]);
 };

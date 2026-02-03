@@ -1,8 +1,12 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, crashReporter, globalShortcut } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import TabManager from "./tabManager.js";
+import { listHistory, clearHistory } from "./history.js";
+import { listBookmarks, addBookmark, removeBookmark } from "./bookmarks.js";
+import { listDownloads, onDownloadsUpdated, setupDownloads } from "./downloads.js";
+import { setupUpdater } from "./updater.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
 const SESSION_FILE = () => path.join(app.getPath("userData"), "session.json");
@@ -12,6 +16,18 @@ let persistTimeout = null;
 const defaultSession = {
     tabs: [{ id: "tab-initial", title: "New Tab", url: "", favicon: undefined, isLoading: false, isActive: true }],
     activeTabId: "tab-initial",
+};
+const normalizeUrl = (raw) => {
+    try {
+        const parsed = new URL(raw);
+        if (!["http:", "https:", "file:"].includes(parsed.protocol)) {
+            return null;
+        }
+        return parsed.toString();
+    }
+    catch {
+        return null;
+    }
 };
 const readSession = async () => {
     try {
@@ -41,6 +57,9 @@ const schedulePersist = () => {
     }, 300);
 };
 const createWindow = async () => {
+    const preloadPath = app.isPackaged
+        ? path.join(__dirname, "preload.cjs")
+        : path.join(process.cwd(), "electron", "preload.cjs");
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 860,
@@ -48,9 +67,10 @@ const createWindow = async () => {
         titleBarStyle: "hiddenInset",
         trafficLightPosition: { x: 20, y: 20 },
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
+            preload: preloadPath,
             contextIsolation: true,
             nodeIntegration: false,
+            sandbox: false,
         },
     });
     tabManager = new TabManager({
@@ -65,6 +85,7 @@ const createWindow = async () => {
     });
     const session = await readSession();
     tabManager.restoreSession(session);
+    setupDownloads();
     if (app.isPackaged) {
         await mainWindow.loadFile(path.join(__dirname, "../../dist/index.html"));
     }
@@ -77,6 +98,43 @@ const createWindow = async () => {
     });
 };
 app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    if (process.env.LUMEN_CRASH_REPORTING === "1") {
+        crashReporter.start({
+            submitURL: "https://example.com/crash", // replace with real endpoint later
+            uploadToServer: true,
+        });
+    }
+    setupUpdater();
+    const registerShortcuts = () => {
+        globalShortcut.register("CommandOrControl+T", () => {
+            if (mainWindow?.isFocused()) {
+                mainWindow.webContents.send("ui:newtab");
+            }
+        });
+        // Cmd/Ctrl+W: close tab if more than 1, otherwise close window.
+        globalShortcut.register("CommandOrControl+W", () => {
+            if (!mainWindow?.isFocused())
+                return;
+            const count = tabManager?.getTabCount() ?? 0;
+            if (count <= 1) {
+                mainWindow.close();
+                return;
+            }
+            const activeId = tabManager?.getActiveTabId();
+            if (activeId) {
+                tabManager?.closeTab(activeId);
+            }
+        });
+    };
+    const unregisterShortcuts = () => {
+        globalShortcut.unregisterAll();
+    };
+    app.on("browser-window-focus", registerShortcuts);
+    app.on("browser-window-blur", unregisterShortcuts);
+    registerShortcuts();
+    app.on("will-quit", unregisterShortcuts);
+});
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         app.quit();
@@ -90,8 +148,8 @@ app.on("activate", () => {
 ipcMain.handle("tabs:get", () => {
     return tabManager?.getState() ?? defaultSession;
 });
-ipcMain.on("tabs:new", (_event, url) => {
-    tabManager?.createTab(url ?? "");
+ipcMain.handle("tabs:new", (_event, url, activate = true) => {
+    return tabManager?.createTab(url ?? "", undefined, "New Tab", activate) ?? null;
 });
 ipcMain.on("tabs:close", (_event, id) => {
     tabManager?.closeTab(id);
@@ -100,7 +158,10 @@ ipcMain.on("tabs:activate", (_event, id) => {
     tabManager?.activateTab(id);
 });
 ipcMain.on("tabs:navigate", (_event, url) => {
-    tabManager?.navigate(url);
+    const safe = normalizeUrl(url);
+    if (safe) {
+        tabManager?.navigate(safe);
+    }
 });
 ipcMain.on("tabs:back", () => {
     tabManager?.goBack();
@@ -114,3 +175,29 @@ ipcMain.on("tabs:reload", () => {
 ipcMain.on("view:bounds", (_event, bounds) => {
     tabManager?.setContentBounds(bounds);
 });
+ipcMain.on("view:hide", () => {
+    tabManager?.hideActiveView();
+});
+ipcMain.on("view:show", () => {
+    tabManager?.showActiveView();
+});
+ipcMain.handle("history:list", () => listHistory());
+ipcMain.handle("history:clear", async () => {
+    await clearHistory();
+});
+ipcMain.handle("bookmarks:list", () => listBookmarks());
+ipcMain.handle("bookmarks:add", async (_event, url, title) => {
+    await addBookmark(url, title);
+});
+ipcMain.handle("bookmarks:remove", async (_event, id) => {
+    await removeBookmark(id);
+});
+ipcMain.handle("downloads:list", () => listDownloads());
+const installDownloadsListeners = () => {
+    if (!mainWindow)
+        return;
+    onDownloadsUpdated((items) => {
+        mainWindow?.webContents.send("downloads:updated", items);
+    });
+};
+installDownloadsListeners();

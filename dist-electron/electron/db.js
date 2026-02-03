@@ -1,16 +1,13 @@
 import Database from "better-sqlite3";
 import path from "node:path";
 import { app } from "electron";
-
 const dbPath = () => path.join(app.getPath("userData"), "lumen.db");
-
-let db: Database.Database | null = null;
-
+let db = null;
 export const getDb = () => {
-  if (!db) {
-    db = new Database(dbPath());
-    db.pragma("journal_mode = WAL");
-    db.exec(`
+    if (!db) {
+        db = new Database(dbPath());
+        db.pragma("journal_mode = WAL");
+        db.exec(`
       CREATE TABLE IF NOT EXISTS history (
         id TEXT PRIMARY KEY,
         url TEXT NOT NULL,
@@ -26,6 +23,6 @@ export const getDb = () => {
         createdAt INTEGER NOT NULL
       );
     `);
-  }
-  return db;
+    }
+    return db;
 };
