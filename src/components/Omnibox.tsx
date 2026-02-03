@@ -10,6 +10,9 @@ type OmniboxProps = {
   isBookmarked: boolean;
   mode?: "interactive" | "preview";
   onCopyUrl?: () => void;
+  showInstallExtension?: boolean;
+  onInstallExtension?: () => void;
+  installDisabled?: boolean;
 };
 
 const Omnibox = ({
@@ -22,6 +25,9 @@ const Omnibox = ({
   isBookmarked,
   mode = "interactive",
   onCopyUrl,
+  showInstallExtension = false,
+  onInstallExtension,
+  installDisabled = false,
 }: OmniboxProps) => {
   const [value, setValue] = useState(activeUrl);
   const [isEditing, setIsEditing] = useState(false);
@@ -51,6 +57,12 @@ const Omnibox = ({
       setValue(activeUrl);
     }
   }, [activeUrl, isEditing]);
+
+  const actionsWidth = useMemo(() => {
+    if (!isHovered || isEditing) return "0px";
+    if (showInstallExtension) return "180px";
+    return "140px";
+  }, [isHovered, isEditing, showInstallExtension]);
 
   return (
     <div
@@ -101,7 +113,7 @@ const Omnibox = ({
           }
         }}
         readOnly={mode === "preview" && !isEditing}
-        style={{ ["--actions-width" as string]: isHovered && !isEditing ? "120px" : "0px" }}
+        style={{ ["--actions-width" as string]: actionsWidth }}
       />
       <div className="omnibox-actions right">
         <button className="icon-button" type="button" aria-label="Refresh" onClick={onReload}>
@@ -126,6 +138,18 @@ const Omnibox = ({
               <rect x="9" y="9" width="13" height="13" rx="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
+          </button>
+        )}
+        {mode === "preview" && showInstallExtension && (
+          <button
+            className="icon-button install"
+            type="button"
+            aria-label="Install extension"
+            onClick={onInstallExtension}
+            disabled={installDisabled}
+            title={installDisabled ? "Installing…" : "Install extension"}
+          >
+            🧩
           </button>
         )}
         <button className="icon-button" aria-label="Share">

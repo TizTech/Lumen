@@ -364,6 +364,16 @@
   box-shadow: inset 0 0 0 1px rgba(91, 143, 138, 0.25);
 }
 
+.icon-button.install {
+  color: var(--color-accent-500);
+  font-size: 14px;
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .main-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width, 260px) 8px 1fr;
@@ -915,6 +925,8 @@
   position: relative;
   z-index: 1;
   pointer-events: none;
+  display: flex;
+  min-height: 100%;
 }
 
 .hero-grid {
@@ -923,6 +935,7 @@
   gap: 32px;
   min-height: 100%;
   align-items: stretch;
+  width: 100%;
 }
 
 .hero-intro {
@@ -930,6 +943,8 @@
   flex-direction: column;
   gap: 18px;
   max-width: none;
+  min-height: 100%;
+  justify-content: space-between;
 }
 
 .hero-kicker {
@@ -987,6 +1002,35 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.hero-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: auto;
+}
+
+.hero-stat {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-surface-4);
+  box-shadow: var(--shadow-subtle);
+}
+
+.hero-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-ink-300);
+  margin-bottom: 6px;
+}
+
+.hero-stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink-900);
 }
 
 .hero-ritual {
@@ -1145,6 +1189,176 @@
   padding: 8px;
 }
 
+.extensions-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 20, 0.28);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: flex-end;
+  padding: 80px 32px 32px;
+  z-index: 60;
+}
+
+.extensions-panel {
+  width: min(420px, 92vw);
+  background: var(--color-surface-2);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow-ambient);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--color-surface-4);
+}
+
+.extensions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.extensions-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.extensions-subtitle {
+  font-size: 13px;
+  color: var(--color-ink-500);
+  margin-top: 4px;
+}
+
+.extensions-close {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  color: var(--color-ink-300);
+  cursor: pointer;
+}
+
+.extensions-callout {
+  font-size: 12px;
+  color: var(--color-ink-500);
+  background: var(--color-surface-1);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.extensions-status {
+  font-size: 12px;
+  color: var(--color-ink-700);
+  background: rgba(121, 169, 163, 0.18);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.extensions-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.extensions-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: var(--color-accent-500);
+  color: var(--color-surface-2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.extensions-btn.ghost {
+  background: transparent;
+  border: 1px solid var(--color-surface-4);
+  color: var(--color-ink-700);
+}
+
+.extensions-btn.danger {
+  color: #b6463a;
+  border-color: rgba(182, 70, 58, 0.4);
+}
+
+.extensions-install label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-ink-300);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.extensions-install-row {
+  display: flex;
+  gap: 8px;
+}
+
+.extensions-input {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid var(--color-surface-4);
+  background: var(--color-surface-1);
+  color: var(--color-ink-900);
+  padding: 10px 12px;
+  font-size: 12px;
+  outline: none;
+}
+
+.extensions-input::placeholder {
+  color: var(--color-ink-300);
+}
+
+.extensions-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-ink-300);
+}
+
+.extensions-error {
+  background: rgba(182, 70, 58, 0.12);
+  color: #b6463a;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.extensions-list {
+  display: grid;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.extensions-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-surface-1);
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid var(--color-surface-4);
+}
+
+.extensions-item-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.extensions-item-sub {
+  font-size: 11px;
+  color: var(--color-ink-300);
+}
+
+.extensions-empty {
+  font-size: 12px;
+  color: var(--color-ink-300);
+  text-align: center;
+  padding: 20px 0;
+}
+
 @media (max-width: 980px) {
   .main-layout {
     grid-template-columns: 1fr;
@@ -1163,7 +1377,8 @@
   }
 
   .hero-actions,
-  .hero-rituals {
+  .hero-rituals,
+  .hero-footer {
     grid-template-columns: 1fr;
   }
 }

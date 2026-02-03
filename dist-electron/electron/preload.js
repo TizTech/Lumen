@@ -38,6 +38,12 @@ contextBridge.exposeInMainWorld("lumen", {
             return () => ipcRenderer.removeListener("downloads:updated", listener);
         },
     },
+    extensions: {
+        list: () => ipcRenderer.invoke("extensions:list"),
+        loadUnpacked: () => ipcRenderer.invoke("extensions:load-unpacked"),
+        installFromWebStore: (id) => ipcRenderer.invoke("extensions:install", id),
+        remove: (id) => ipcRenderer.invoke("extensions:remove", id),
+    },
     onNewTabRequested: (callback) => {
         const listener = () => callback();
         ipcRenderer.on("ui:newtab", listener);

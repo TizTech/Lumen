@@ -40,6 +40,14 @@ const BrowserSurface = ({
   const rituals = [
     { title: "Capture Idea", detail: "Open a fresh tab and start typing." },
     { title: "Collect Sources", detail: "Bookmark a few links for later." },
+    { title: "Breathe", detail: "Pause before the next click." },
+    { title: "Archive", detail: "Tidy up tabs you no longer need." },
+  ];
+  const stats = [
+    { label: "Open tabs", value: "2" },
+    { label: "Focus streak", value: "14 min" },
+    { label: "Saved links", value: "6" },
+    { label: "Active space", value: "Personal" },
   ];
 
   useEffect(() => {
@@ -121,6 +129,14 @@ const BrowserSurface = ({
                   <div key={ritual.title} className="hero-ritual">
                     <div className="hero-ritual-title">{ritual.title}</div>
                     <div className="hero-ritual-detail">{ritual.detail}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="hero-footer">
+                {stats.map((stat) => (
+                  <div key={stat.label} className="hero-stat">
+                    <div className="hero-stat-label">{stat.label}</div>
+                    <div className="hero-stat-value">{stat.value}</div>
                   </div>
                 ))}
               </div>

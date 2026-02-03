@@ -73,3 +73,12 @@ export type DownloadItem = {
   state: "progressing" | "completed" | "cancelled" | "interrupted";
   startedAt: number;
 };
+
+export type ExtensionInfo = {
+  id: string;
+  name: string;
+  version: string;
+  path: string;
+  source: "unpacked" | "webstore";
+  enabled: boolean;
+};

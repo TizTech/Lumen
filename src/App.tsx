@@ -4,9 +4,30 @@ import Omnibox from "./components/Omnibox";
 import Sidebar from "./components/Sidebar";
 import BrowserSurface from "./components/BrowserSurface";
 import NewTabModal from "./components/NewTabModal";
+import ExtensionsPanel from "./components/ExtensionsPanel";
 import useTabs from "./hooks/useTabs";
 import { type Favorite, type QuickLink, type Space, type TabGroup } from "./bridge/types";
 import { groupTabs } from "./utils/tabGrouping";
+
+const getWebStoreExtensionId = (url: string) => {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\\./, "");
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    const maybeId = segments[segments.length - 1] ?? "";
+    const idParam = parsed.searchParams.get("id") ?? "";
+    const isCwsHost = host === "chromewebstore.google.com" || host === "chrome.google.com";
+
+    const candidate = /[a-p]{32}/i.test(maybeId) ? maybeId : /[a-p]{32}/i.test(idParam) ? idParam : "";
+    if (isCwsHost && candidate) {
+      return candidate;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
 
 const spaces: Space[] = [
   { id: "space-1", name: "Personal", color: "#6f92d7", count: 5 },
@@ -80,6 +101,10 @@ const App = () => {
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
   const [tabGroups, setTabGroups] = useState<TabGroup[]>([]);
   const tidySnapshotRef = useRef<{ groups: TabGroup[] } | null>(null);
+  const [extensionsVisible, setExtensionsVisible] = useState(false);
+  const [installingExtension, setInstallingExtension] = useState(false);
+  const [extensionsNotice, setExtensionsNotice] = useState<string | null>(null);
+  const [extensionsError, setExtensionsError] = useState<string | null>(null);
 
   const handleNavigate = (input: string) => {
     if (!commands) return;
@@ -100,6 +125,7 @@ const App = () => {
   };
 
   const activeUrl = activeTab?.url ?? "";
+  const webStoreExtensionId = getWebStoreExtensionId(activeUrl);
   const isBookmarked =
     !!activeUrl && bookmarks.some((bookmark) => bookmark.url.toLowerCase() === activeUrl.toLowerCase());
 
@@ -156,13 +182,14 @@ const App = () => {
 
   useEffect(() => {
     if (!commands) return;
-    if (newTabOpen) {
+    const shouldHide = newTabOpen || extensionsVisible;
+    if (shouldHide) {
       commands.hideView();
       commands.setContentBounds({ x: 0, y: 0, width: 0, height: 0 });
     } else {
       commands.showView();
     }
-  }, [commands, newTabOpen]);
+  }, [commands, newTabOpen, extensionsVisible]);
 
   useEffect(() => {
     if (!resizing) return;
@@ -235,6 +262,23 @@ const App = () => {
     // Snapshot before/after to enable undo later.
     tidySnapshotRef.current = { groups: tabGroups };
     setTabGroups(result.groups);
+  };
+
+  const handleInstallExtension = async () => {
+    if (!commands || !webStoreExtensionId || installingExtension) return;
+    setExtensionsNotice(null);
+    setExtensionsError(null);
+    setInstallingExtension(true);
+    try {
+      await commands.extensions.installFromWebStore(webStoreExtensionId);
+      setExtensionsNotice("Extension installed.");
+      setExtensionsVisible(true);
+    } catch (error) {
+      setExtensionsError(error instanceof Error ? error.message : "Failed to install extension.");
+      setExtensionsVisible(true);
+    } finally {
+      setInstallingExtension(false);
+    }
   };
 
   const handleAddSpace = () => {
@@ -324,6 +368,9 @@ const App = () => {
                   isBookmarked={isBookmarked}
                   mode="preview"
                   onCopyUrl={() => activeUrl && navigator.clipboard.writeText(activeUrl)}
+                  showInstallExtension={!!webStoreExtensionId}
+                  onInstallExtension={handleInstallExtension}
+                  installDisabled={installingExtension}
                 />
               </div>
               <div className="sidebar-actions">
@@ -410,17 +457,43 @@ const App = () => {
   return (
     <div className={`app ${isElectron ? "app-electron" : ""}`}>
       <div className="lumen-shell">
-        <button
-          className="theme-toggle"
-          type="button"
-          onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          title={theme === "dark" ? "Light mode" : "Dark mode"}
-        >
-          <span className="theme-toggle-icon">{theme === "dark" ? "☀︎" : "☾"}</span>
-        </button>
+        <div className="app-actions">
+          <button
+            className="app-action-btn"
+            type="button"
+            onClick={() => setExtensionsVisible(true)}
+            aria-label="Manage extensions"
+            title="Extensions"
+          >
+            🧩
+          </button>
+          <button
+            className="app-action-btn"
+            type="button"
+            onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? "☀︎" : "☾"}
+          </button>
+        </div>
         {isElectron ? appContent : <WindowFrame title="LUMEN">{appContent}</WindowFrame>}
       </div>
+      <ExtensionsPanel
+        visible={extensionsVisible}
+        onClose={() => {
+          setExtensionsVisible(false);
+          setExtensionsNotice(null);
+          setExtensionsError(null);
+        }}
+        onOpenStore={() => {
+          commands?.newTab("https://chromewebstore.google.com/", true);
+          setExtensionsVisible(false);
+        }}
+        statusMessage={extensionsNotice}
+        errorMessage={extensionsError}
+        isInstalling={installingExtension}
+      />
       <NewTabModal
         visible={newTabOpen}
         onClose={() => setNewTabOpen(false)}

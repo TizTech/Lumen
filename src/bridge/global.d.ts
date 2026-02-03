@@ -1,4 +1,4 @@
-import { type BookmarkEntry, type ContentBounds, type DownloadItem, type HistoryEntry, type SessionState, type Tab } from "./types";
+import { type BookmarkEntry, type ContentBounds, type DownloadItem, type ExtensionInfo, type HistoryEntry, type SessionState, type Tab } from "./types";
 
 type LumenApi = {
   getState: () => Promise<SessionState>;
@@ -26,6 +26,12 @@ type LumenApi = {
   downloads: {
     list: () => Promise<DownloadItem[]>;
     onUpdated: (callback: (items: DownloadItem[]) => void) => () => void;
+  };
+  extensions: {
+    list: () => Promise<ExtensionInfo[]>;
+    loadUnpacked: () => Promise<ExtensionInfo[]>;
+    installFromWebStore: (id: string) => Promise<ExtensionInfo[]>;
+    remove: (id: string) => Promise<ExtensionInfo[]>;
   };
   onNewTabRequested: (callback: () => void) => () => void;
 };

@@ -7,6 +7,7 @@ import { listHistory, clearHistory } from "./history.js";
 import { listBookmarks, addBookmark, removeBookmark } from "./bookmarks.js";
 import { listDownloads, onDownloadsUpdated, setupDownloads } from "./downloads.js";
 import { setupUpdater } from "./updater.js";
+import { installFromWebStore, listExtensions, loadPersistedExtensions, loadUnpackedExtension, removeExtension, } from "./extensions.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
 const SESSION_FILE = () => path.join(app.getPath("userData"), "session.json");
@@ -60,6 +61,7 @@ const createWindow = async () => {
     const preloadPath = app.isPackaged
         ? path.join(__dirname, "preload.cjs")
         : path.join(process.cwd(), "electron", "preload.cjs");
+    await loadPersistedExtensions();
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 860,
@@ -197,6 +199,21 @@ ipcMain.handle("bookmarks:remove", async (_event, id) => {
     await removeBookmark(id);
 });
 ipcMain.handle("downloads:list", () => listDownloads());
+ipcMain.handle("extensions:list", () => listExtensions());
+ipcMain.handle("extensions:load-unpacked", async () => {
+    if (!mainWindow)
+        return listExtensions();
+    await loadUnpackedExtension(mainWindow);
+    return listExtensions();
+});
+ipcMain.handle("extensions:install", async (_event, id) => {
+    await installFromWebStore(id);
+    return listExtensions();
+});
+ipcMain.handle("extensions:remove", async (_event, id) => {
+    await removeExtension(id);
+    return listExtensions();
+});
 const installDownloadsListeners = () => {
     if (!mainWindow)
         return;
