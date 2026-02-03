@@ -29,6 +29,18 @@ const BrowserSurface = ({
 }: BrowserSurfaceProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const showHero = !activeTab?.url;
+  const now = new Date();
+  const timeLabel = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const dateLabel = now.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+  const focusStacks = [
+    { title: "Morning Review", detail: "Docs • Notes • Calendar" },
+    { title: "Design Sprint", detail: "Figma • Drive • Loom" },
+    { title: "Reading List", detail: "Articles • Research • Clips" },
+  ];
+  const rituals = [
+    { title: "Capture Idea", detail: "Open a fresh tab and start typing." },
+    { title: "Collect Sources", detail: "Bookmark a few links for later." },
+  ];
 
   useEffect(() => {
     if (!window.lumen || !containerRef.current) {
@@ -88,20 +100,59 @@ const BrowserSurface = ({
       <DownloadsPanel visible={downloadsVisible} items={downloads} />
       {showHero && (
         <div className="hero-surface" aria-hidden={!showHero}>
-          <div className="hero">
-            <h1 className="hero-title">Lumen</h1>
-            <p className="hero-tagline">
-              A calmer window to the web. Collect thoughts, shift contexts, and breathe before the
-              next click.
-            </p>
-          </div>
-          <div className="quick-links">
-            {quickLinks.map((link) => (
-              <div key={link.id} className="quick-link">
-                <span className="quick-icon">{link.icon}</span>
-                <span>{link.name}</span>
+          <div className="hero-grid">
+            <div className="hero-intro">
+              <div className="hero-kicker">Lumen</div>
+              <h1 className="hero-title">A calmer window to the web.</h1>
+              <p className="hero-tagline">
+                Collect thoughts, shift contexts, and breathe before the next click. Your tabs are
+                light, your spaces are intentional.
+              </p>
+              <div className="hero-actions">
+                {quickLinks.map((link) => (
+                  <div key={link.id} className="hero-action">
+                    <span className="hero-action-icon">{link.icon}</span>
+                    <span>{link.name}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+              <div className="hero-rituals">
+                {rituals.map((ritual) => (
+                  <div key={ritual.title} className="hero-ritual">
+                    <div className="hero-ritual-title">{ritual.title}</div>
+                    <div className="hero-ritual-detail">{ritual.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="hero-side">
+              <div className="hero-card hero-timecard">
+                <div className="hero-time">{timeLabel}</div>
+                <div className="hero-date">{dateLabel}</div>
+                <div className="hero-sub">Quiet mode • Clean slate • New tab ready</div>
+              </div>
+              <div className="hero-card">
+                <div className="hero-card-title">Focus stacks</div>
+                <div className="hero-stack-list">
+                  {focusStacks.map((stack) => (
+                    <div key={stack.title} className="hero-stack">
+                      <div className="hero-stack-title">{stack.title}</div>
+                      <div className="hero-stack-detail">{stack.detail}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="hero-card hero-metrics">
+                <div>
+                  <div className="hero-metric-label">Open tabs</div>
+                  <div className="hero-metric-value">2</div>
+                </div>
+                <div>
+                  <div className="hero-metric-label">Active space</div>
+                  <div className="hero-metric-value">Personal</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

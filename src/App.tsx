@@ -30,6 +30,19 @@ const quickLinks: QuickLink[] = [
 const App = () => {
   const { tabs, activeTab, commands, bookmarks, refreshBookmarks } = useTabs();
   const [isElectron, setIsElectron] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    try {
+      const stored = window.localStorage.getItem("lumen-theme");
+      if (stored === "light" || stored === "dark") {
+        return stored;
+      }
+      const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+      return prefersDark ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
 
   useEffect(() => {
     const detected =
@@ -40,6 +53,16 @@ const App = () => {
       document.body.classList.add("is-electron");
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem("lumen-theme", theme);
+    } catch {
+      // Ignore storage errors in hardened contexts.
+    }
+  }, [theme]);
   const [bookmarksVisible, setBookmarksVisible] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [historyItems, setHistoryItems] = useState<import("./bridge/types").HistoryEntry[]>([]);
@@ -387,6 +410,15 @@ const App = () => {
   return (
     <div className={`app ${isElectron ? "app-electron" : ""}`}>
       <div className="lumen-shell">
+        <button
+          className="theme-toggle"
+          type="button"
+          onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Light mode" : "Dark mode"}
+        >
+          <span className="theme-toggle-icon">{theme === "dark" ? "☀︎" : "☾"}</span>
+        </button>
         {isElectron ? appContent : <WindowFrame title="LUMEN">{appContent}</WindowFrame>}
       </div>
       <NewTabModal
