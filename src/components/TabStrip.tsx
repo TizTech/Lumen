@@ -8,6 +8,7 @@ type TabStripProps = {
   orientation?: "horizontal" | "vertical";
   dense?: boolean;
   onContextMenu?: (id: string, x: number, y: number) => void;
+  showAddButton?: boolean;
 };
 
 const TabStrip = ({
@@ -18,6 +19,7 @@ const TabStrip = ({
   orientation = "horizontal",
   dense = false,
   onContextMenu,
+  showAddButton = true,
 }: TabStripProps) => {
   return (
     <div
@@ -64,9 +66,11 @@ const TabStrip = ({
           </button>
         </div>
       ))}
-      <button className="tab-add" type="button" onClick={onNewTab} aria-label="New tab">
-        +
-      </button>
+      {showAddButton && (
+        <button className="tab-add" type="button" onClick={onNewTab} aria-label="New tab">
+          +
+        </button>
+      )}
     </div>
   );
 };

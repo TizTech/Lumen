@@ -515,6 +515,12 @@
   letter-spacing: 0.12em;
 }
 
+.tabs-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .tabs-section-title {
   font-size: 11px;
 }
@@ -527,6 +533,48 @@
   background: var(--color-surface-1);
   color: var(--color-ink-600);
   cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.tabs-section-btn:hover {
+  background: var(--color-surface-3);
+}
+
+.tabs-section-btn.tidy {
+  width: auto;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-700);
+}
+
+.tabs-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tab-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-ink-300);
+}
+
+.tab-group-count {
+  font-size: 10px;
+  color: var(--color-ink-300);
 }
 
 .newtab-overlay {

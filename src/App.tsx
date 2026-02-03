@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import WindowFrame from "./components/WindowFrame";
 import Omnibox from "./components/Omnibox";
 import Sidebar from "./components/Sidebar";
 import BrowserSurface from "./components/BrowserSurface";
 import NewTabModal from "./components/NewTabModal";
 import useTabs from "./hooks/useTabs";
-import { type Favorite, type QuickLink, type Space } from "./bridge/types";
+import { type Favorite, type QuickLink, type Space, type TabGroup } from "./bridge/types";
+import { groupTabs } from "./utils/tabGrouping";
 
 const spaces: Space[] = [
   { id: "space-1", name: "Personal", color: "#6f92d7", count: 5 },
@@ -54,6 +55,8 @@ const App = () => {
   const [newTabOpen, setNewTabOpen] = useState(false);
   const [pendingSpaceId, setPendingSpaceId] = useState<string | null>(null);
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
+  const [tabGroups, setTabGroups] = useState<TabGroup[]>([]);
+  const tidySnapshotRef = useRef<{ groups: TabGroup[] } | null>(null);
 
   const handleNavigate = (input: string) => {
     if (!commands) return;
@@ -176,6 +179,41 @@ const App = () => {
     return { ...space, count };
   });
 
+  const groupedTabs = (() => {
+    if (tabGroups.length === 0) return null;
+    const activeIds = new Set(activeTabs.map((tab) => tab.id));
+    const tabsById = new Map(tabs.map((tab) => [tab.id, tab]));
+
+    const visibleGroups = tabGroups
+      .map((group) => ({
+        ...group,
+        tabs: group.tabIds
+          .map((tabId) => tabsById.get(tabId))
+          .filter((tab): tab is NonNullable<typeof tab> => !!tab)
+          .filter((tab) => activeIds.has(tab.id)),
+      }))
+      .filter((group) => group.tabs.length > 0);
+
+    const groupedIds = new Set(visibleGroups.flatMap((group) => group.tabs.map((tab) => tab.id)));
+    const ungrouped = activeTabs.filter((tab) => !groupedIds.has(tab.id));
+
+    return { groups: visibleGroups, ungrouped };
+  })();
+
+  // Entry point requested: tidyUpTabs(force = false).
+  const tidyUpTabs = (force = false) => {
+    const result = groupTabs({
+      tabs,
+      existingGroups: tabGroups,
+      force,
+      now: Date.now(),
+    });
+
+    // Snapshot before/after to enable undo later.
+    tidySnapshotRef.current = { groups: tabGroups };
+    setTabGroups(result.groups);
+  };
+
   const handleAddSpace = () => {
     const name = `Space ${spacesState.length + 1}`;
     setSpacesState((prev) => [
@@ -225,10 +263,13 @@ const App = () => {
           }}
           onCancelRenameSpace={() => setEditingSpaceId(null)}
           tabs={activeTabs}
+          tabGroups={groupedTabs?.groups}
+          ungroupedTabs={groupedTabs?.ungrouped ?? []}
           activeTabId={activeTab?.id ?? null}
           onActivateTab={(id) => commands?.activateTab(id)}
           onCloseTab={(id) => commands?.closeTab(id)}
           onNewTab={() => setNewTabOpen(true)}
+          onTidyUp={() => tidyUpTabs(false)}
           denseTabs={denseTabs}
           onTabContextMenu={(id, x, y) => setTabMenu({ id, x, y })}
           collapsed={sidebarCollapsed}

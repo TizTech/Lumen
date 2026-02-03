@@ -13,7 +13,8 @@
     "package": "npm run build && electron-builder",
     "start": "electron dist-electron/electron/main.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -37,7 +38,8 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
-    "wait-on": "^8.0.4"
+    "wait-on": "^8.0.4",
+    "vitest": "^3.2.4"
   },
   "build": {
     "appId": "com.lumen.browser",
