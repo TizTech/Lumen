@@ -101,6 +101,7 @@ const Omnibox = ({
           }
         }}
         readOnly={mode === "preview" && !isEditing}
+        style={{ ["--actions-width" as string]: isHovered && !isEditing ? "120px" : "0px" }}
       />
       <div className="omnibox-actions right">
         <button className="icon-button" type="button" aria-label="Refresh" onClick={onReload}>

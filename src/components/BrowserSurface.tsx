@@ -42,17 +42,10 @@ const BrowserSurface = ({
       }
 
       const rect = node.getBoundingClientRect();
-      const styles = window.getComputedStyle(node);
-      const paddingLeft = parseFloat(styles.paddingLeft) || 0;
-      const paddingTop = parseFloat(styles.paddingTop) || 0;
-      const paddingRight = parseFloat(styles.paddingRight) || 0;
-      const paddingBottom = parseFloat(styles.paddingBottom) || 0;
-
-      const hasWeb = activeTab?.url && !suppressWeb;
-      const x = rect.left + (hasWeb ? paddingLeft : 0);
-      const y = rect.top + (hasWeb ? paddingTop : 0);
-      const width = rect.width - (hasWeb ? paddingLeft + paddingRight : 0);
-      const height = rect.height - (hasWeb ? paddingTop + paddingBottom : 0);
+      const x = rect.left;
+      const y = rect.top;
+      const width = rect.width;
+      const height = rect.height;
 
       window.lumen?.setContentBounds({
         x: Math.round(x),

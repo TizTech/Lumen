@@ -65,7 +65,7 @@ const createWindow = async () => {
         height: 860,
         backgroundColor: "#f6f7f9",
         titleBarStyle: "hiddenInset",
-        trafficLightPosition: { x: 20, y: 20 },
+        trafficLightPosition: { x: 20, y: 16 },
         webPreferences: {
             preload: preloadPath,
             contextIsolation: true,

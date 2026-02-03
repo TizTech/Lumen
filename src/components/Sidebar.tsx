@@ -97,23 +97,6 @@ const Sidebar = ({
         </div>
       )}
       {header && <div className="sidebar-header">{header}</div>}
-      <div className="tabs-section">
-        <div className="tabs-section-header">
-          <div className="tabs-section-title">Tabs</div>
-          <button className="tabs-section-btn" type="button" onClick={onNewTab}>
-            +
-          </button>
-        </div>
-        <TabStrip
-          tabs={tabs}
-          onActivate={onActivateTab}
-          onClose={onCloseTab}
-          onNewTab={onNewTab}
-          orientation="vertical"
-          dense={denseTabs}
-          onContextMenu={onTabContextMenu}
-        />
-      </div>
       <div className="sidebar-section">
         <div className="sidebar-title-row">
           <button
@@ -208,6 +191,23 @@ const Sidebar = ({
               </div>
             </div>
           ))}
+      </div>
+      <div className="tabs-section">
+        <div className="tabs-section-header">
+          <div className="tabs-section-title">Tabs</div>
+          <button className="tabs-section-btn" type="button" onClick={onNewTab}>
+            +
+          </button>
+        </div>
+        <TabStrip
+          tabs={tabs}
+          onActivate={onActivateTab}
+          onClose={onCloseTab}
+          onNewTab={onNewTab}
+          orientation="vertical"
+          dense={denseTabs}
+          onContextMenu={onTabContextMenu}
+        />
       </div>
     </aside>
   );
